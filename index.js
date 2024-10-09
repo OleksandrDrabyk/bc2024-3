@@ -1,7 +1,6 @@
 const { program } = require('commander');
 const fs = require('fs');
 
-// Налаштування параметрів командного рядка
 program
   .requiredOption('-i, --input <path>', 'шлях до файлу для читання')
   .option('-o, --output <path>', 'шлях до файлу для запису результату')
@@ -11,40 +10,44 @@ program.parse(process.argv);
 
 const options = program.opts();
 
+if (!options.input) {
+  console.error('Please, specify input file');  
+  process.exit(1);  
+}
+
 try {
-  // Перевірка наявності файлу
   if (!fs.existsSync(options.input)) {
     console.error('Cannot find input file');
     process.exit(1);
   }
 
-  // Читання файлу
   const fileContent = fs.readFileSync(options.input, 'utf8');
   const jsonRecords = JSON.parse(fileContent);
 
-  // Фільтрація індексів споживчих цін
-  const filteredRecords = jsonRecords.filter(record => record.ku === 13 && record.value >= 0);
+  // Фільтрація записів після читання вхідного файлу
+  const filteredRecords = jsonRecords.filter(record => record.ku >= 13 && record.value > 5);
 
-  // Виведення попередження, якщо результат порожній
+  // Попередження, якщо не знайдено відфільтрованих записів
   if (filteredRecords.length === 0) {
     console.warn("Відфільтрованих об'єктів не виявлено.");
   }
 
-  // Якщо немає опції output або display, програма не повинна нічого виводити
-  if (!options.output && !options.display) {
-    process.exit(0);
-  }
-
-  // Якщо задано опцію display, вивести відфільтровані дані у консоль
-  if (options.display) {
-    console.log("Відфільтровані дані:", filteredRecords);
-  }
-
-  // Якщо задано опцію output, записати результат у файл
+  // Обробка виходу, якщо зазначено
   if (options.output) {
     const outputValues = filteredRecords.map(record => record.value).join('\n');
     fs.writeFileSync(options.output, outputValues, 'utf8');
     console.log(`Результати записано у файл: ${options.output}`);
+  }
+
+  // Виведення результатів, якщо зазначено
+  if (options.display) {
+    const outputValues = filteredRecords.map(record => record.value).join('\n');
+    console.log("Відфільтровані значення value:", outputValues);
+  }
+
+  // Вихід, якщо не вказано жодної з опцій виходу або відображення
+  if (!options.output && !options.display) {
+    process.exit(0);
   }
 
 } catch (err) {
