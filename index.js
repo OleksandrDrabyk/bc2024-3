@@ -1,19 +1,30 @@
 const { program } = require('commander');
 const fs = require('fs');
 
+program.configureOutput({
+  writeErr: (str) => {
+    if (str.includes("option '-i, --input <path>' argument missing")) {
+      console.error('Please, specify input file');
+    } else {
+      console.error(str);
+    }
+  }
+});
+
+
 program
   .option('-i, --input <path>', 'шлях до файлу для читання')  
   .option('-o, --output <path>', 'шлях до файлу для запису результату')
   .option('-d, --display', 'вивести результат у консоль');
 
+
 program.parse(process.argv);
 
 const options = program.opts();
 
-
 if (!options.input) {
-    console.error('Please, specify input file');
-    process.exit(1);
+  console.error('Please, specify input file');
+  process.exit(1);
 }
 
 try {
